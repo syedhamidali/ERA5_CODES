@@ -56,6 +56,18 @@ def pressure_levels_to_geometric_height(ds, alt_max=15000, alt_res=250):
     --------
     pressure_to_height : Transform ERA5 Reanalysis dataset with multiple time steps.
     """
+    # Rename dimensions and drop unused variables
+    rename_dict = {
+        "valid_time": "time",
+        "pressure_level": "level",
+        "latitude": "lat",
+        "longitude": "lon",
+    }
+    ds = ds.rename({k: v for k, v in rename_dict.items() if k in ds})
+
+    # Drop unnecessary variables if present
+    ds = ds.drop_vars(["number", "expver"], errors="ignore")
+    
     # Ensure 'z' exists in the dataset to calculate geopotential height
     if "z" not in ds.data_vars:
         raise ValueError(
@@ -147,6 +159,12 @@ def pressure_to_height(ds, alt_max=15000, alt_res=250):
     ----------
     .. [1] https://confluence.ecmwf.int/pages/viewpage.action?pageId=151531383
 
+    Example
+    -------
+    >>> ds = xr.open_mfdataset("path_to_era5_data/*.nc")
+    >>> ds_full = pressure_to_height(ds, alt_max=30000, alt_res=250)
+    >>> print(ds_full)
+    
     See Also
     --------
     pressure_levels_to_geometric_height : Transform ERA5 Reanalysis dataset with single time step.
